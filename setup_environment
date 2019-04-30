@@ -1,0 +1,6 @@
+
+# Set API_TOKEN to a SmartCambridge API token valid for the server
+# selected by the API_SCHEMA variable below or the default of
+# https://smartcambridge.org/api/docs/
+
+export API_TOKEN=f7772c5a09b344e1e7394249d1a5bbe507eaf4c7
