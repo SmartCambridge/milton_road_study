@@ -15,7 +15,7 @@ API_SCHEMA = os.getenv('API_SCHEMA', 'https://tfc-app1.cl.cam.ac.uk/api/docs/')
 API_TOKEN = os.getenv('API_TOKEN', None)
 assert API_TOKEN, 'API_TOKEN environment variable not set'
 
-zones = ['a428_east', 'a428_west', 'a1m_north', 'a1m_south', 'a428_caxton_east', 'a428_caxton_west']
+zones = ['milton_pandr_south', 'milton_pandr_north']
 years = [2018, 2019]
 
 # /api/v1/zone/history/a428_east/?start_date=2019-04-01&end_date=2019-04-30
@@ -35,17 +35,17 @@ def get_data():
 
     for zone in zones:
 
-        for year in years:
+        csv_filename = 'transits-{}.csv'.format(zone)
+        logger.info('Outputting CSV to %s', csv_filename)
 
-            ctr = 0
+        with open(csv_filename, 'w', newline='') as csvfile:
 
-            csv_filename = 'transits-{}-{}.csv'.format(zone, year)
-            logger.info('Outputting CSV to %s', csv_filename)
+            output = csv.writer(csvfile, dialect='excel', quoting=csv.QUOTE_ALL)
+            output.writerow(['Date', 'Duration', 'Distance'])
 
-            with open(csv_filename, 'w', newline='') as csvfile:
+            for year in years:
 
-                output = csv.writer(csvfile, dialect='excel', quoting=csv.QUOTE_ALL)
-                output.writerow(['Date', 'Duration', 'Distance'])
+                ctr = 0
 
                 for month in range(1, 13):
 
