@@ -61,7 +61,7 @@ def do_histplot(column, bins, xmax, zone, title, savefile):
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
-    column.plot.hist(bins=bins, range=(0,xmax))
+    column.plot.hist(bins=bins, range=(0, xmax), ax=ax)
 
     ax.grid(axis='y')
 
@@ -105,92 +105,137 @@ for plot in plots:
     # Some filtered data frames
     df_weekdays = df[df.index.dayofweek < 5]
     df_weekends = df[df.index.dayofweek >= 5]
-    df_intervals = df[(df.Interval_minutes < 60) & (df.index.hour >= 7) & (df.index.hour < 18) & (df.index.dayofweek < 5)]
+    df_valid_intervals = df[(df.Interval_minutes < 60)]
+    df_weekday_intervals = df[(df.Interval_minutes < 60) & (df.index.dayofweek < 5)]
+    df_weekend_intervals = df[(df.Interval_minutes < 60) & (df.index.dayofweek >= 5)]
+    # Subset in on or after 07:00, before 18:00 when timetabled interval in 10 min
+    df_valid_intervals_subset = df[(df.Interval_minutes < 60) & (df.index.hour >= 7) & (df.index.hour < 18)]
+    df_weekday_intervals_subset = df[(df.Interval_minutes < 60) & (df.index.hour >= 7) & (df.index.hour < 18) & (df.index.dayofweek < 5)]
+    df_weekend_intervals_subset = df[(df.Interval_minutes < 60) & (df.index.hour >= 7) & (df.index.hour < 18) & (df.index.dayofweek >= 5)]
 
-    # # == Trip Duration
+    # ***** Trip Duration
 
     do_histplot(
-        df.Duration_minutes, 30, 30, plot['zone'], 'best trip durations',
-        basename + '-best-hist.pdf')
+        df.Duration_minutes, 30, 30, plot['zone'], 'all trip durations',
+        basename + '-all_trip-hist.pdf')
 
-    # =============== Weekends, by day of year
-
-    do_boxplot(
-        df_weekends, df_weekends.index.dayofyear, 'Duration_minutes',
-        'Day of Year', plot['zone'], plot['max'], 'best trip duration by day (weekends)',
-        basename + '-best-sat-sun-day.pdf')
-
-    # =============== By hour of day, weekdays
+    # =============== By hour of day, mon-fri
 
     do_boxplot(
         df_weekdays, df_weekdays.index.hour, 'Duration_minutes',
-        'Hour of Day', plot['zone'], plot['max'], 'best trip duration by hour of day (weekdays)',
-        basename + '-best-mon-fri-hod.pdf')
+        'Hour of Day', plot['zone'], plot['max'], 'all trip durations, by hour of day (Mon-Fri)',
+        basename + '-all_trip-hod-mon_fri.pdf')
 
-    # =============== By hour of day, weekends
+    # =============== By hour of day, sat-sun
 
     do_boxplot(
         df_weekends, df_weekends.index.hour, 'Duration_minutes',
-        'Hour of Day', plot['zone'], plot['max'], 'best trip duration by hour of day (weekends)',
-        basename + '-best-sat-sun-hod.pdf')
+        'Hour of Day', plot['zone'], plot['max'], 'all trip durations, by hour of day (Sat-Sun)',
+        basename + '-all_trip-hod-sat_sun.pdf')
+
+    # =============== By month of year, mon-fri
+
+    do_boxplot(
+        df_weekdays, df_weekdays.index.month, 'Duration_minutes',
+        'Month of year', plot['zone'], plot['max'], 'all trip durations, by month of year (Mon-Fri)',
+        basename + '-all_trip-moy-mon_fri.pdf')
+
+    # =============== By month of year, sat-sun
+
+    do_boxplot(
+        df_weekends, df_weekends.index.month, 'Duration_minutes',
+        'Month of Year', plot['zone'], plot['max'], 'all trip durations, by month of year (Sat-Sun)',
+        basename + '-all_trip-moy-sat_sun.pdf')
 
     # =============== By day of week
 
     do_boxplot(
         df, df.index.dayofweek, 'Duration_minutes',
-        'Day of Week (0 = Monday)', plot['zone'], plot['max'], 'best trip duration by day of week',
-        basename + '-best-dow.pdf')
+        'Day of Week (0 = Monday)', plot['zone'], plot['max'], 'all trip durations, by day of week',
+        basename + '-all_trip-dow.pdf')
 
-    # # == Service interval
+    # ***** Service interval
 
     do_histplot(
-        df_intervals.Interval_minutes, 60, 60, plot['zone'], 'service interval',
+        df_valid_intervals.Interval_minutes, 60, 60, plot['zone'], 'all service intervals',
         basename + '-interval-hist.pdf')
 
-    # =============== Weekdays, by month of year
+    # =============== By hour of day, mon-fri
 
     do_boxplot(
-        df_intervals, df_intervals.index.month, 'Interval_minutes',
-        'Month of Year', plot['zone'], plot['max'], 'service interval by month',
-        basename + '-interval-month.pdf')
+        df_weekday_intervals, df_weekday_intervals.index.hour, 'Interval_minutes',
+        'Hour of day', plot['zone'], plot['max'], 'all service intervals, by hour of day (Mon-Fri)',
+        basename + '-interval-hod-mon_fri.pdf')
 
     # =============== By hour of day, weekdays
 
     do_boxplot(
-        df_intervals, df_intervals.index.hour, 'Interval_minutes',
-        'Hour of Day', plot['zone'], plot['max'], 'service interval by hour of day',
-        basename + '-interval-hod.pdf')
+        df_weekend_intervals, df_weekend_intervals.index.hour, 'Interval_minutes',
+        'Hour of Day', plot['zone'], plot['max'], 'all service intervals, by hour of day (Sat-Sun)',
+        basename + '-interval-hod-sat_sun.pdf')
+
+    # =============== By month of year, mon-fri
+
+    do_boxplot(
+        df_weekday_intervals_subset, df_weekday_intervals_subset.index.month, 'Interval_minutes',
+        'Month of year', plot['zone'], plot['max'], 'service intervals, by month of year (Mon-Fri, 07:00-18:00)',
+        basename + '-interval-moy-mon_fri.pdf')
+
+    # =============== By month of year, weekdays
+
+    do_boxplot(
+        df_weekend_intervals_subset, df_weekend_intervals_subset.index.hour, 'Interval_minutes',
+        'Month of year', plot['zone'], plot['max'], 'all service intervals, by month of year (Sat-Sun, 07:00-18:00)',
+        basename + '-interval-moy-sat_sun.pdf')
 
     # =============== By day of week
 
     do_boxplot(
-        df_intervals, df_intervals.index.dayofweek, 'Interval_minutes',
-        'Day of Week (0 = Monday)', plot['zone'], plot['max'], 'service interval by day of week',
+        df_valid_intervals_subset, df_valid_intervals_subset.index.dayofweek, 'Interval_minutes',
+        'Day of Week (0 = Monday)', plot['zone'], plot['max'], 'all service intervals, by day of week (07:00-18:00)',
         basename + '-interval-dow.pdf')
 
     # # == Worst case
 
     do_histplot(
-        df_intervals.Worst_case, 100, 100, plot['zone'], 'worst trip duration',
+        df_valid_intervals.Worst_case, 100, 100, plot['zone'], 'worst trip duration',
         basename + '-worst-hist.pdf')
 
-    # =============== Weekdays, by month of year
+    # =============== Sample, best/worst by month of day
 
     do_boxplot(
-        df_intervals, df_intervals.index.month, 'Worst_case',
-        'Month of Year', plot['zone'], plot['max'], 'worst trip duration by month',
-        basename + '-worst-month.pdf')
+        df_weekday_intervals_subset, df_weekday_intervals_subset.index.month, 'Worst_case',
+        'Month of Year', plot['zone'], plot['max'], 'worst trip duration, by month (Mon-Fri, 07:00-18:00)',
+        basename + '-worst-moy.pdf')
 
-    # =============== By hour of day, weekdays
+    # =============== Sample, best/worst by hour of day
 
     do_boxplot(
-        df_intervals, df_intervals.index.hour, 'Worst_case',
-        'Hour of Day', plot['zone'], plot['max'], 'worst trip duration by hour of day',
+        df_weekday_intervals, df_weekday_intervals.index.hour, 'Worst_case',
+        'Hour of Day', plot['zone'], plot['max'], 'worst trip duration, by hour of day (Mon-Fri)',
         basename + '-worst-hod.pdf')
 
-    # =============== By day of week
+    # =============== Sample,best/worst by day of week
 
     do_boxplot(
-        df_intervals, df_intervals.index.dayofweek, 'Worst_case',
-        'Day of Week (0 = Monday)', plot['zone'], plot['max'], 'worst trip duration by day of week',
+        df_valid_intervals_subset, df_valid_intervals_subset.index.dayofweek, 'Worst_case',
+        'Day of Week (0 = Monday)', plot['zone'], plot['max'], 'worst trip duration, by day of week (Mon-Fri, 07:00-18:00)',
         basename + '-worst-dow.pdf')
+
+    # Best/Worst compared
+
+    best_sum = df_weekday_intervals_subset.Duration_minutes.groupby(df_weekday_intervals_subset.index.hour).quantile(0.75)
+    worst_sum = df_weekday_intervals_subset.Worst_case.groupby(df_weekday_intervals_subset.index.hour).quantile(0.75)
+
+    df_plot = pd.concat([best_sum, worst_sum], axis = 1)
+
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+
+    ax.bar(df_plot.index, df_plot.Worst_case, bottom=df_plot.Duration_minutes, fill=False, edgecolor=['b'])
+    ax.grid(axis='x')
+    ax.set_ylim([0, plot['max']])
+    ax.set_xlabel('Hour of day')
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    fig.suptitle('{} {}'.format(plot['zone'], 'Best and worst journeys, 75\'th percentile (Mon-Fri, 07:00 - 18:00)'))
+    plt.savefig(basename + '-best_worst.pdf')
+    plt.close()
