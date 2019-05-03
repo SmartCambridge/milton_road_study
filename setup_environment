@@ -1,6 +1,36 @@
 
-# Set API_TOKEN to a SmartCambridge API token valid for the server
-# selected by the API_SCHEMA variable below or the default of
-# https://smartcambridge.org/api/docs/
+# Set PYTHONPATH to include a copy of the txc_helper Python module
 
-export API_TOKEN=f7772c5a09b344e1e7394249d1a5bbe507eaf4c7
+export PYTHONPATH="${HOME}/icp/operating_profile/"
+
+# Set API_TOKEN to a SmartCambridge API token valid for the server
+# selected by the API_SCHEMA variable in util.py
+
+export API_TOKEN='2cd5bed1dbcf2a269c450415e1448f2a5a1abf22'
+
+# SUncomment and set the folowing to override the built-in defaults
+
+# A directory containing SIRI-VM data in
+# JSON format stored in a conventioanl Adaptive Cities Program
+# directory heirachy (yyyy/mm/dd/<timestamp>_yyyy-mm-dd-hh-mm-ss.json)
+
+export SIRIVM_PATH="${HOME}/icp/data/sirivm_json/data_bin/"
+
+# A directory containing TNDS timetable files, one directory
+# per region
+
+export TIMETABLE_PATH="${HOME}/icp/data/TNDS_bus_data/sections/"
+
+# The URL of a Core Schema schema for the SmartCambridge API
+
+##export API_SCHEMA='https://smartcambridge.org/api/docs/'
+
+# The bounding box containing within which trips and journeys
+# must start or end to be included in the analysis
+
+##export BOUNDING_BOX='0.007896,52.155610,0.225048,52.267842'
+
+# The TNDS regions containing to all possible trips being
+# analysed (space-seperated list)
+
+##export TNDS_REGIONS='EA SE'
