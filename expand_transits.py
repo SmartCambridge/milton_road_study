@@ -7,6 +7,7 @@ minute from the departure time of the first bus to the departure time of
 the last one
 """
 
+import collections
 import datetime
 import logging
 import sys
@@ -21,95 +22,86 @@ logger = logging.getLogger('__name__')
 header = [
     'Passenger_Arrival',
     'Passenger_Wait',
-    'Trip_Departure',
-    'Trip_Arrival',
-    'Trip_Duration',
-    'Passenger_Journey_Duration',
+    'Bus_Departure',
+    'Bus_Arrival',
+    'Bus_Duration',
+    'Passenger_Duration',
 ]
 
-for zone in zones:
 
-    logger.debug('Processing %s', zone)
+def process_zones():
 
-    in_filename = 'transits-{}.csv'.format(zone)
-    logger.debug('Reading %s', in_filename)
-    with open(in_filename, 'r', newline='') as in_file:
-        in_headers = next(in_file)
+    for zone in zones:
+
+        logger.debug('Processing %s', zone)
+
+        # Read in...
+
+        in_filename = 'transits-{}.csv'.format(zone)
+        logger.info('Reading %s', in_filename)
+
+        with open(in_filename, 'r', newline='') as in_file:
+            input = csv.reader(in_file, dialect='excel', quoting=csv.QUOTE_ALL)
+            next(input)   # Skip headers
+            trip_table = collections.OrderedDict()
+            for row in input:
+
+                trip = {}
+                raw_arrive, raw_duration, raw_distance = row
+                trip['arrive'] = isodate.parse_datetime(raw_arrive)
+                trip['duration'] = datetime.timedelta(seconds=float(raw_duration))
+                trip['depart'] = trip['arrive'] - trip['duration']
+                day = trip['depart'].date()
+                trip['distance'] = float(raw_distance)
+
+                if day not in trip_table:
+                    trip_table[day] = []
+                trip_table[day].append(trip)
+
+        # ... write out
+
+        step = datetime.timedelta(minutes=1)
 
         out_filename = 'trips-{}.csv'.format(zone)
-        logger.debug('Writing %s', out_filename)
+        logger.info('writing %s', out_filename)
         with open(out_filename, 'w', newline='') as out_file:
+            output = csv.writer(out_file, dialect='excel', quoting=csv.QUOTE_ALL)
+            output.writerow(header)
 
-            for row in in_file:
+            for day in trip_table:
+                logger.info('Processing %s %s', zone, day)
+                todays_trips = trip_table[day]
 
-                raw_arrival, raw_duration, raw_distance = row
+                # Find the minute before the first bus of the day
+                start = todays_trips[0]['depart'].replace(second=0)
+                # And the last departure of the day
+                end = todays_trips[-1]['depart']
 
-                arrival = isodate.parse_datetime(raw_arrival)
-                duration = 
-                departure = arrival - duration
+                logger.debug("Start %s, end %s, step %s", start, end, step)
 
+                # Step through the day from 'start' to 'end' in steps of 'step'
+                # Find the next bus to depart after 'start'
+                while start < end:
+                    # Find first departure after 'start'
+                    for row in todays_trips:
+                        logger.debug("row depart: %s, start: %s", row['depart'], start)
+                        if row['depart'] > start:
+                            wait = int((row['depart'] - start).total_seconds())
+                            traveling = int((row['duration']).total_seconds())
+                            trip_duration = wait + traveling
+                            output.writerow([
+                                start,
+                                wait,
+                                row['depart'],
+                                row['arrive'],
+                                traveling,
+                                trip_duration,
+                            ])
+                            break
+                    else:
+                        logger.error("No bus for a departure at %s", start)
 
-
-
-
-
-
-# Build a table of trip times
-trip_table = []
-for segment in segments['segments']:
-    if not segment['on_route']:
-        continue
-    departure = isodate.parse_datetime(segment['positions'][0]['RecordedAtTime'])
-    arrival = isodate.parse_datetime(segment['positions'][-1]['RecordedAtTime'])
-    trip_table.append([departure, arrival, segment['VehicleRef']])
-
-# Find the top of the hour before the first bus
-start = trip_table[0][0].replace(minute=0, second=0)
-# And the top of the hour after the last one
-end = trip_table[-1][0].replace(minute=0, second=0) + datetime.timedelta(hours=1)
-step = datetime.timedelta(minutes=1)
-
-logger.debug("Start %s, end %s, step %s", start, end, step)
-
-# Step through the day from 'start' to 'end' in steps of 'step'
-# Find the next bus to depart after 'start'
-while start < end:
-    # Find first departure after 'start'
-    for row in trip_table:
-        logger.debug("row[1]: %s, start: %s", row[1], start)
-        if row[0] > start:
-            wait = int((row[0] - start).total_seconds())
-            traveling = int((row[1] - row[0]).total_seconds())
-            duration = wait + traveling
-            values.append([
-                start,
-                wait,
-                row[2],
-                row[0],
-                row[1],
-                traveling,
-                duration,
-            ])
-            break
-    else:
-        logger.debug("No bus for a departure at %s", start)
-
-    start = start + step
-
-return header, values
-
-
-def emit_csv(basename, header, values):
-
-    csv_filename = '{}-expanded.csv'.format(basename)
-    logger.info('Outputing CSV to %s', csv_filename)
-
-    with open(csv_filename, 'w', newline='') as csvfile:
-
-        # Create CSV, add headers
-        output = csv.writer(csvfile, dialect='excel', quoting=csv.QUOTE_ALL)
-        output.writerow(header)
-        output.writerows(values)
+                    start = start + step
 
 
 def main():
@@ -118,13 +110,7 @@ def main():
 
     logger.info('Start')
 
-    basename = sys.argv[1]
-
-    segments = load_segments(basename)
-
-    header, values = sumarise(segments)
-
-    emit_csv(basename, header, values)
+    process_zones()
 
     logger.info('Stop')
 
