@@ -10,13 +10,13 @@ plt.rc('figure', figsize=(11.69, 8.27))
 
 plots = [
     {'zone': 'milton_pandr_south',
-     'max': 100,
+     'max': 70,
      'duration': 16,
      'interval': 10,
      'sun-interval': 15
      },
     {'zone': 'milton_pandr_north',
-     'max': 100,
+     'max': 70,
      'duration': 20,
      'interval': 10,
      'sun-interval': 15
@@ -27,6 +27,10 @@ mon_fri = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', '
 
 months = ['Jan 2018', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
           'Jan 2019', 'Feb', 'Mar', 'Apr']
+
+
+def fixup(zone_name):
+    return zone_name.replace('_', ' ').replace('pandr', 'P&R').replace('milton', 'Milton')
 
 
 def setup_axies(ax, max, xlabel):
@@ -41,7 +45,7 @@ def setup_axies(ax, max, xlabel):
     ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
 
 
-def do_boxplot(df, by, column, xlabel, zone, ymax, title, savefile, labels=[], hod=False, hline=None):
+def do_boxplot(df, by, column, xlabel, zone, ymax, title, savefile, labels=[], hod=False, hlines=[]):
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
@@ -61,21 +65,22 @@ def do_boxplot(df, by, column, xlabel, zone, ymax, title, savefile, labels=[], h
     elif hod:
         ax.set_xticklabels(['{:02d}'.format(int(x.get_text())) for x in ax.get_xticklabels()])
 
-    if hline:
-        ax.axhline(hline).set_color('r')
+    for hline in hlines:
+        ax.axhline(hline[0]).set_color('r')
+        ax.text(0.5, hline[0], hline[1], size=8, color='red', ha='left', va='bottom')
 
     ax.set_ylabel('Minutes')
     ax.set_ylim([0, ymax])
     ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
 
-    fig.suptitle('{} {}'.format(zone, title))
+    fig.suptitle('{} {}'.format(fixup(zone), title))
 
     plt.savefig(savefile)
 
     plt.close()
 
 
-def do_histplot(column, bins, xmax, zone, title, savefile, vline=None):
+def do_histplot(column, bins, xmax, zone, title, savefile, vlines=[]):
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
@@ -83,11 +88,14 @@ def do_histplot(column, bins, xmax, zone, title, savefile, vline=None):
 
     ax.grid(axis='y')
 
-    ax.set_xlabel('Minutes')
-    if vline:
-        ax.axvline(vline).set_color('r')
+    ax.set_ylim([0, 6000])
 
-    fig.suptitle('{} {}'.format(zone, title))
+    ax.set_xlabel('Minutes')
+    for vline in vlines:
+        ax.axvline(vline[0]).set_color('r')
+        ax.text(vline[0]+0.3, 5950, vline[1], size=8, color='red', rotation=90, ha='left', va='top')
+
+    fig.suptitle('{} {}'.format(fixup(zone), title))
 
     plt.savefig(savefile)
 
@@ -142,111 +150,111 @@ for plot in plots:
 
     do_histplot(
         df.Duration_minutes, plot['max'], plot['max'], plot['zone'], 'all trip durations',
-        basename + '-all_trip-hist.pdf', vline=plot['duration'])
+        basename + '-all_trip-hist.pdf', vlines=((plot['duration'], 'Timetable'),))
 
     # =============== By hour of day, mon-fri
 
     do_boxplot(
         df_weekdays, df_weekdays.index.hour, 'Duration_minutes',
         'Hour of Day', plot['zone'], plot['max'], 'all trip durations, by hour of day (Mon-Fri)',
-        basename + '-all_trip-hod-mon_fri.pdf', hod=True, hline=plot['duration'])
+        basename + '-all_trip-hod-mon_fri.pdf', hod=True, hlines=((plot['duration'], 'Timetable'),))
 
     # =============== By hour of day, sat
 
     do_boxplot(
         df_saturday, df_saturday.index.hour, 'Duration_minutes',
         'Hour of Day', plot['zone'], plot['max'], 'all trip durations, by hour of day (Sat)',
-        basename + '-all_trip-hod-sat.pdf', hline=plot['duration'])
+        basename + '-all_trip-hod-sat.pdf', hlines=((plot['duration'], 'Timetable'),))
 
     # =============== By hour of day, sun
 
     do_boxplot(
         df_sunday, df_sunday.index.hour, 'Duration_minutes',
         'Hour of Day', plot['zone'], plot['max'], 'all trip durations, by hour of day (Sun)',
-        basename + '-all_trip-hod-sun.pdf', hline=plot['duration'])
+        basename + '-all_trip-hod-sun.pdf', hlines=((plot['duration'], 'Timetable'),))
 
     # =============== By month of year, mon-fri
 
     do_boxplot(
         df_weekdays, df_weekdays.Month, 'Duration_minutes',
         '', plot['zone'], plot['max'], 'all trip durations, by month of year (Mon-Fri)',
-        basename + '-all_trip-moy-mon_fri.pdf', labels=months, hline=plot['duration'])
+        basename + '-all_trip-moy-mon_fri.pdf', labels=months, hlines=((plot['duration'], 'Timetable'),))
 
     # =============== By month of year, sat
 
     do_boxplot(
         df_saturday, df_saturday.Month, 'Duration_minutes',
         '', plot['zone'], plot['max'], 'all trip durations, by month of year (Sat)',
-        basename + '-all_trip-moy-sat.pdf', labels=months, hline=plot['duration'])
+        basename + '-all_trip-moy-sat.pdf', labels=months, hlines=((plot['duration'], 'Timetable'),))
 
     # =============== By month of year, sun
 
     do_boxplot(
         df_sunday, df_sunday.Month, 'Duration_minutes',
         '', plot['zone'], plot['max'], 'all trip durations, by month of year (Sun)',
-        basename + '-all_trip-moy-sun.pdf', labels=months, hline=plot['duration'])
+        basename + '-all_trip-moy-sun.pdf', labels=months, hlines=((plot['duration'], 'Timetable'),))
 
     # =============== By day of week
 
     do_boxplot(
         df, df.index.dayofweek, 'Duration_minutes',
         '', plot['zone'], plot['max'], 'all trip durations, by day of week',
-        basename + '-all_trip-dow.pdf', labels=mon_fri, hline=plot['duration'])
+        basename + '-all_trip-dow.pdf', labels=mon_fri, hlines=((plot['duration'], 'Timetable'),))
 
     # ***** Service interval
 
     do_histplot(
         df_valid_intervals.Interval_minutes, plot['max'], plot['max'], plot['zone'], 'all service intervals',
-        basename + '-interval-hist.pdf', vline=plot['interval'])
+        basename + '-interval-hist.pdf', vlines=((plot['interval'], 'Timetable'),))
 
     # =============== By hour of day, mon-fri
 
     do_boxplot(
         df_weekday_intervals, df_weekday_intervals.index.hour, 'Interval_minutes',
         'Hour of day', plot['zone'], plot['max'], 'all service intervals, by hour of day (Mon-Fri)',
-        basename + '-interval-hod-mon_fri.pdf', hline=plot['interval'])
+        basename + '-interval-hod-mon_fri.pdf', hlines=((plot['interval'], 'Timetable'),))
 
     # =============== By hour of day, saturday
 
     do_boxplot(
         df_saturday_intervals, df_saturday_intervals.index.hour, 'Interval_minutes',
         'Hour of Day', plot['zone'], plot['max'], 'all service intervals, by hour of day (Sat)',
-        basename + '-interval-hod-sat.pdf', hline=plot['interval'])
+        basename + '-interval-hod-sat.pdf', hlines=((plot['interval'], 'Timetable'),))
 
     # =============== By hour of day, sunday
 
     do_boxplot(
         df_sunday_intervals, df_sunday_intervals.index.hour, 'Interval_minutes',
         'Hour of Day', plot['zone'], plot['max'], 'all service intervals, by hour of day (Sun)',
-        basename + '-interval-hod-sun.pdf', hline=plot['sun-interval'])
+        basename + '-interval-hod-sun.pdf', hlines=((plot['sun-interval'], 'Timetable'),))
 
     # =============== By month of year, mon-fri
 
     do_boxplot(
         df_weekday_intervals_subset, df_weekday_intervals_subset.Month, 'Interval_minutes',
         '', plot['zone'], plot['max'], 'service intervals, by month of year (Mon-Fri, 07:00-18:00)',
-        basename + '-interval-moy-mon_fri.pdf', labels=months, hline=plot['interval'])
+        basename + '-interval-moy-mon_fri.pdf', labels=months, hlines=((plot['interval'], 'Timetable'),))
 
     # =============== By month of year, saturdays
 
     do_boxplot(
         df_saturday_intervals_subset, df_saturday_intervals_subset.Month, 'Interval_minutes',
         '', plot['zone'], plot['max'], 'all service intervals, by month of year (Sat, 08:00-18:00)',
-        basename + '-interval-moy-sat.pdf', labels=months, hline=plot['interval'])
+        basename + '-interval-moy-sat.pdf', labels=months, hlines=((plot['interval'], 'Timetable'),))
 
     # =============== By month of year, sundays
 
     do_boxplot(
         df_sunday_intervals_subset, df_sunday_intervals_subset.Month, 'Interval_minutes',
         '', plot['zone'], plot['max'], 'all service intervals, by month of year (Sun)',
-        basename + '-interval-moy-sun.pdf', labels=months, hline=plot['sun-interval'])
+        basename + '-interval-moy-sun.pdf', labels=months, hlines=((plot['sun-interval'], 'Timetable'),))
 
     # =============== By day of week
 
     do_boxplot(
         df_valid_intervals_subset, df_valid_intervals_subset.index.dayofweek, 'Interval_minutes',
         '', plot['zone'], plot['max'], 'all service intervals, by day of week (07:00-18:00)',
-        basename + '-interval-dow.pdf', labels=mon_fri, hline=plot['interval'])
+        basename + '-interval-dow.pdf', labels=mon_fri, hlines=((plot['interval'], 'Timetable'),))
 
     # # # == Worst case
 

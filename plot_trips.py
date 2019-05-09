@@ -29,6 +29,10 @@ months = ['Jan 2018', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'O
           'Jan 2019', 'Feb', 'Mar', 'Apr']
 
 
+def fixup(zone_name):
+    return zone_name.replace('_', ' ').replace('pandr', 'P&R').replace('milton', 'Milton')
+
+
 def setup_axies(ax, max, xlabel):
 
     ax.set_title('')
@@ -62,13 +66,14 @@ def do_boxplot(df, by, column, xlabel, zone, ymax, title, savefile, labels=[], h
         ax.set_xticklabels(['{:02d}'.format(int(x.get_text())) for x in ax.get_xticklabels()])
 
     for hline in hlines:
-        ax.axhline(hline).set_color('r')
+        ax.axhline(hline[0]).set_color('r')
+        ax.text(0.5, hline[0], hline[1], size=8, color='red', ha='left', va='bottom')
 
     ax.set_ylabel('Minutes')
     ax.set_ylim([0, ymax])
     ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
 
-    fig.suptitle('{} {}'.format(zone, title))
+    fig.suptitle('{} {}'.format(fixup(zone), title))
 
     plt.savefig(savefile)
 
@@ -83,11 +88,14 @@ def do_histplot(column, bins, xmax, zone, title, savefile, vlines=[]):
 
     ax.grid(axis='y')
 
+    ax.set_ylim([0, 25000])
+
     ax.set_xlabel('Minutes')
     for vline in vlines:
-        ax.axvline(vline).set_color('r')
+        ax.axvline(vline[0]).set_color('r')
+        ax.text(vline[0]+0.5, 24800, vline[1], size=8, color='red', rotation=90, ha='left', va='top')
 
-    fig.suptitle('{} {}'.format(zone, title))
+    fig.suptitle('{} {}'.format(fixup(zone), title))
 
     plt.savefig(savefile)
 
@@ -111,11 +119,17 @@ for plot in plots:
 
     df['Month'] = df.index.year * 100 + df.index.month
 
-    # Drop records with Passenger_Duration below 0.5'th percentile or above 99.5'th
-    df = df[(df.Passenger_Duration > df.Passenger_Duration.quantile(.01)) &
-            (df.Passenger_Duration < df.Passenger_Duration.quantile(.99))]
+    # Drop records with Bus_Duration below 0.5'th percentile or above 99.5'th or
+    # Bus_Interval times of more than an hour
+    df = df[
+        (df.Bus_Duration > df.Bus_Duration.quantile(.005)) &
+        (df.Bus_Duration < df.Bus_Duration.quantile(.995)) &
+        (df.Bus_Interval > df.Bus_Interval.quantile(.005)) &
+        (df.Bus_Interval < df.Bus_Interval.quantile(.98))
+    ]
 
     # Some filtered data frames
+    df_7_to_18 = df[(df.index.hour >= 7) & (df.index.hour < 18)]
     df_weekdays = df[df.index.dayofweek < 5]
     df_weekdays_7_to_18 = df[(df.index.dayofweek < 5) & (df.index.hour >= 7) & (df.index.hour < 18)]
     df_saturday = df[df.index.dayofweek == 5]
@@ -127,9 +141,9 @@ for plot in plots:
     do_histplot(
         df.Passenger_Duration_minutes, plot['max'], plot['max'], plot['zone'], 'all passenger trips',
         basename + '-passenger_trip-hist.pdf',
-        vlines=(plot['duration'],
-                plot['duration'] + plot['interval'],
-                plot['duration'] + plot['sun-interval']))
+        vlines=((plot['duration'], 'Timetable min'),
+                (plot['duration'] + plot['interval'], 'Timetable max'),
+                (plot['duration'] + plot['sun-interval'], 'Timetable max (Sun)')))
 
     # =============== By hour of day, mon-fri
 
@@ -137,7 +151,8 @@ for plot in plots:
         df_weekdays, df_weekdays.index.hour, 'Passenger_Duration_minutes',
         'Hour of Day', plot['zone'], plot['max'], 'all passenger trips, by hour of day (Mon-Fri)',
         basename + '-passenger_trip-hod-mon_fri.pdf', hod=True,
-        hlines=(plot['duration'], plot['duration'] + plot['interval']))
+        hlines=((plot['duration'], 'Timetable min'),
+                (plot['duration'] + plot['interval'], 'Timetable max')))
 
     # =============== By hour of day, sat
 
@@ -145,7 +160,8 @@ for plot in plots:
         df_saturday, df_saturday.index.hour, 'Passenger_Duration_minutes',
         'Hour of Day', plot['zone'], plot['max'], 'all passenger trips, by hour of day (Sat)',
         basename + '-passenger_trip-hod-sat.pdf',
-        hlines=(plot['duration'], plot['duration'] + plot['interval']))
+        hlines=((plot['duration'], 'Timetable min'),
+                (plot['duration'] + plot['interval'], 'Timetable max')))
 
     # =============== By hour of day, sun
 
@@ -153,7 +169,8 @@ for plot in plots:
         df_sunday, df_sunday.index.hour, 'Passenger_Duration_minutes',
         'Hour of Day', plot['zone'], plot['max'], 'all passenger trips, by hour of day (Sun)',
         basename + '-passenger_trip-hod-sun.pdf',
-        hlines=(plot['duration'], plot['duration'] + plot['sun-interval']))
+        hlines=((plot['duration'], 'Timetable min'),
+                (plot['duration'] + plot['interval'], 'Timetable max')))
 
     # =============== By month of year, mon-fri 07:00-18:00
 
@@ -161,7 +178,8 @@ for plot in plots:
         df_weekdays_7_to_18, df_weekdays_7_to_18.Month, 'Passenger_Duration_minutes',
         '', plot['zone'], plot['max'], 'passenger trips, by month of year (Mon-Fri, 07:00-18:00)',
         basename + '-passenger_trip-moy-mon_fri.pdf', labels=months,
-        hlines=(plot['duration'], plot['duration'] + plot['interval']))
+        hlines=((plot['duration'], 'Timetable min'),
+                (plot['duration'] + plot['interval'], 'Timetable max')))
 
     # =============== By month of year, Sat 08:00-18:00
 
@@ -169,7 +187,8 @@ for plot in plots:
         df_saturday_8_to_18, df_saturday_8_to_18.Month, 'Passenger_Duration_minutes',
         '', plot['zone'], plot['max'], 'passenger trips, by month of year (Sat, 08:00-18:00)',
         basename + '-passenger_trip-moy-sat.pdf', labels=months,
-        hlines=(plot['duration'], plot['duration'] + plot['interval']))
+        hlines=((plot['duration'], 'Timetable min'),
+                (plot['duration'] + plot['interval'], 'Timetable max')))
 
     # =============== By month of year, Sun
 
@@ -177,13 +196,36 @@ for plot in plots:
         df_sunday, df_sunday.Month, 'Passenger_Duration_minutes',
         '', plot['zone'], plot['max'], 'passenger trips, by month of year (Sun)',
         basename + '-passenger_trip-moy-sun.pdf', labels=months,
-        hlines=(plot['duration'], plot['duration'] + plot['sun-interval']))
+        hlines=((plot['duration'], 'Timetable min'),
+                (plot['duration'] + plot['interval'], 'Timetable max')))
 
     # =============== By day of week
 
     do_boxplot(
-        df, df.index.dayofweek, 'Passenger_Duration_minutes',
-        '', plot['zone'], plot['max'], 'passenger trips, by day of week',
+        df_7_to_18, df_7_to_18.index.dayofweek, 'Passenger_Duration_minutes',
+        '', plot['zone'], plot['max'], 'passenger trips, by day of week (07:00-18:00)',
         basename + '-passenger_trip-dow.pdf', labels=mon_fri,
-        hlines=(plot['duration'],
-                plot['duration'] + plot['interval']))
+        hlines=((plot['duration'], 'Timetable min'),
+                (plot['duration'] + plot['interval'], 'Timetable max')))
+
+    # Eacmple daily graph
+
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+
+    df['2019-04-02'].Passenger_Duration_minutes.plot(ax=ax)
+
+    ax.grid(axis='y')
+
+    ax.set_ylim([0, 70])
+
+    ax.set_xlabel('Passenger arrival')
+    ax.set_ylabel('Minutes')
+
+    #ax.axhline(plot['duration']).set_color('r')
+    #ax.text(plot['duration']+0.5, , vline[1], size=8, color='red', rotation=90, ha='left', va='top')
+
+    fig.suptitle('{} {}'.format(fixup(plot['zone']), "Example total travel time time (2019-04-02)"))
+
+    plt.savefig(basename + '-passenger_trip-example.pdf')
+
+    plt.close()

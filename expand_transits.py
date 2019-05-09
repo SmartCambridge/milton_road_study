@@ -25,6 +25,7 @@ header = [
     'Bus_Departure',
     'Bus_Arrival',
     'Bus_Duration',
+    'Bus_Interval',
     'Passenger_Duration',
 ]
 
@@ -43,6 +44,8 @@ def process_zones():
         with open(in_filename, 'r', newline='') as in_file:
             input = csv.reader(in_file, dialect='excel', quoting=csv.QUOTE_ALL)
             next(input)   # Skip headers
+
+            previous_depart = None
             trip_table = collections.OrderedDict()
             for row in input:
 
@@ -53,10 +56,13 @@ def process_zones():
                 trip['depart'] = trip['arrive'] - trip['duration']
                 day = trip['depart'].date()
                 trip['distance'] = float(raw_distance)
+                trip['interval'] = (trip['depart'] - previous_depart).total_seconds() if previous_depart else None
 
                 if day not in trip_table:
                     trip_table[day] = []
                 trip_table[day].append(trip)
+
+                previous_depart = trip['depart']
 
         # ... write out
 
@@ -95,6 +101,7 @@ def process_zones():
                                 row['depart'],
                                 row['arrive'],
                                 traveling,
+                                row['interval'],
                                 trip_duration,
                             ])
                             break
