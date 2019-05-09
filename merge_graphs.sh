@@ -53,4 +53,6 @@ trips-milton_pandr_north-passenger_trip-hod-sat.pdf \
 trips-milton_pandr_south-passenger_trip-hod-sun.pdf \
 trips-milton_pandr_north-passenger_trip-hod-sun.pdf \
 trips-milton_pandr_south-passenger_trip-example.pdf \
-trips-milton_pandr_north-passenger_trip-example.pdf
+trips-milton_pandr_north-passenger_trip-example.pdf \
+trips-milton_pandr_south-passenger_trip-overall.pdf \
+trips-milton_pandr_north-passenger_trip-overall.pdf

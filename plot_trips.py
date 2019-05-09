@@ -208,7 +208,7 @@ for plot in plots:
         hlines=((plot['duration'], 'Timetable min'),
                 (plot['duration'] + plot['interval'], 'Timetable max')))
 
-    # Eacmple daily graph
+    # =============== Example daily graph
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
@@ -227,5 +227,36 @@ for plot in plots:
     fig.suptitle('{} {}'.format(fixup(plot['zone']), "Example total travel time time (2019-04-02)"))
 
     plt.savefig(basename + '-passenger_trip-example.pdf')
+
+    plt.close()
+
+    # =============== Grand summary - Mon-Fri, 07:00-18:00
+
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+
+    df_7_to_18.boxplot(
+        column='Passenger_Duration_minutes',
+        grid=False,
+        whis='range',
+        ax=ax)
+
+    ax.set_title('')
+    ax.grid(axis='y')
+
+    ax.set_xticklabels([])
+
+    ax.axhline(plot['duration']).set_color('r')
+    ax.text(0.5, plot['duration'], 'Timetable min', size=8, color='red', ha='left', va='bottom')
+
+    ax.axhline(plot['duration'] + plot['interval']).set_color('r')
+    ax.text(0.5, plot['duration'] + plot['interval'], 'Timetable max', size=8, color='red', ha='left', va='bottom')
+
+    ax.set_ylabel('Minutes')
+    ax.set_ylim([0, plot['max']])
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(5))
+
+    fig.suptitle('{} {}'.format(fixup(plot['zone']), 'all passenger trips (Mon-Fri, 07:00-18:00)'))
+
+    plt.savefig(basename + '-passenger_trip-overall.pdf')
 
     plt.close()
