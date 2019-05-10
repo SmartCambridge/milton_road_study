@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
+import datetime
+import pytz
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 
 sns.set()
@@ -212,13 +215,16 @@ for plot in plots:
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
-    df['2019-04-02'].Passenger_Duration_minutes.plot(ax=ax)
+    df['2019-04-02'].Passenger_Duration_minutes.plot(style='b.', ax=ax)
 
     ax.grid(axis='y')
 
     ax.set_ylim([0, 70])
 
-    ax.set_xlabel('Passenger arrival')
+    ax.set_xlabel('Passenger arrival time')
+    ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=60))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz=pytz.timezone('Europe/London')))
+    ax.set_xlim([datetime.datetime(2019, 4, 2, 5), datetime.datetime(2019, 4, 2, 20)])
     ax.set_ylabel('Minutes')
 
     #ax.axhline(plot['duration']).set_color('r')
