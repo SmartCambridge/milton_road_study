@@ -3,3 +3,4 @@ setup_environment
 *.csv
 .ipynb_checkpoints
 venv/
+setup_env
