@@ -118,6 +118,7 @@ def do_histplot(column, bins, xmax, title, savefile):
     ax.grid(axis='y')
 
     ax.set_ylim([0, 5000])
+    ax.set_xlim([column.min(), column.max()])
 
     ax.set_xlabel('Minutes')
 
