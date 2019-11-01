@@ -24,7 +24,9 @@ DATAFILES = [
     'drakewell_data/2019-05.csv',
     'drakewell_data/2019-06.csv',
     'drakewell_data/2019-07.csv',
-    'drakewell_data/2019-08.csv'
+    'drakewell_data/2019-08.csv',
+    'drakewell_data/2019-09.csv',
+    'drakewell_data/2019-10.csv',
 ]
 
 COSIT = '9800XCZR4LWP'
@@ -37,7 +39,7 @@ plt.rc('figure', figsize=(11.69, 8.27))
 mon_fri = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 months = ['Aug 2018', 'Sep', 'Oct', 'Nov', 'Dec',
-          'Jan 2019', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
+          'Jan 2019', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
 
 
 def get_drakewell_data():
