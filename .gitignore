@@ -4,3 +4,4 @@ setup_environment
 .ipynb_checkpoints
 venv/
 setup_env
+.DS_Store
