@@ -99,7 +99,7 @@ def do_graph_set(df, suptitle, source_tag):
 
     do_boxplot(
         df, 100*df.index.hour+df.index.minute, 'count',
-        'Time of Day', 'Sample count', COUNT_YMAX, 'Sample counts by time of day',
+        'Time of Day', 'Journeys per sample', COUNT_YMAX, 'Sample sizes by time of day',
         'count-tod.pdf', suptitle, source_tag, hod=True)
 
     # =============== By month of year, mon-fri 07:00-18:00
@@ -111,7 +111,7 @@ def do_graph_set(df, suptitle, source_tag):
 
     do_boxplot(
         df, df.Month, 'count',
-        '', 'Sampe count', COUNT_YMAX, 'Sample counts by month',
+        '', 'Journeys per sample', COUNT_YMAX, 'Sample sizes by month',
         'count-month.pdf', suptitle, source_tag, labels=months)
 
     # =============== By day of week
@@ -123,7 +123,7 @@ def do_graph_set(df, suptitle, source_tag):
 
     do_boxplot(
         df, df.index.dayofweek, 'count',
-        '', 'Sample count', COUNT_YMAX, 'Sample counts by day of week',
+        '', 'Journeys per sample', COUNT_YMAX, 'Sample sizes by day of week',
         'count-dow.pdf', suptitle, source_tag, labels=mon_fri)
 
     # =============== Grand summary - Mon-Fri, 07:00-18:00
@@ -165,9 +165,9 @@ def do_graph_set(df, suptitle, source_tag):
 
     ax.set_xticklabels([])
 
-    ax.set_ylabel('Sample count')
+    ax.set_ylabel('Journeys per sample')
     ax.set_ylim([0, COUNT_YMAX])
-    ax.set_title('All sample counts')
+    ax.set_title('All sample sizes')
     ax.yaxis.set_major_locator(ticker.MaxNLocator(25))
 
     fig.suptitle(suptitle)
