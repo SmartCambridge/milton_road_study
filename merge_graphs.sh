@@ -4,13 +4,21 @@
 
 "/System/Library/Automator/Combine PDF Pages.action/Contents/Resources/join.py" \
 -o graphs.pdf   --verbose                                      \
-drakewell/drakewell-hist.pdf \
-bus/bus-hist.pdf \
-drakewell/drakewell-overall.pdf \
-bus/bus-overall.pdf \
-drakewell/drakewell-tod.pdf \
-bus/bus-tod.pdf \
-drakewell/drakewell-dow.pdf \
-bus/bus-dow.pdf \
-drakewell/drakewell-month.pdf \
-bus/bus-month.pdf
+bus-hist.pdf \
+drakewell-hist.pdf \
+bus-minutes-overall.pdf \
+drakewell-minutes-overall.pdf \
+bus-minutes-tod.pdf \
+drakewell-minutes-tod.pdf \
+bus-minutes-dow.pdf \
+drakewell-minutes-dow.pdf \
+bus-minutes-month.pdf \
+drakewell-minutes-month.pdf \
+bus-count-overall.pdf \
+drakewell-count-overall.pdf \
+bus-count-tod.pdf \
+drakewell-count-tod.pdf \
+bus-count-dow.pdf \
+drakewell-count-dow.pdf \
+bus-count-month.pdf \
+drakewell-count-month.pdf

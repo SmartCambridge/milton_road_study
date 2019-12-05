@@ -12,6 +12,7 @@ This corresponds to:
     * '36 Milton InB \*\*' (CAMBRIDGE_JTMS|9800X7003HZY - A14 to Green End Rd/Kings Hedges Rd)
     * '12 Milton Rd InB \*' (CAMBRIDGE_JTMS|9800YU0FYRKZ - Green End Rd/Kings
       Hedges Rd to Arbury Rd/Union Ln
+    * Combied length 2186m
 * (new) SmartCambridge zone:
     * milton\_road\_alternate\_in.
 
