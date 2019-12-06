@@ -40,11 +40,15 @@ def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
+    flierprops = dict(markersize=5, marker='.')
+
     df.boxplot(
         by=by,
         column=column,
         grid=False,
-        whis='range',
+        #whis='range',
+        whis=(1, 99),
+        flierprops=flierprops,
         ax=ax)
 
     ax.set_title('')
