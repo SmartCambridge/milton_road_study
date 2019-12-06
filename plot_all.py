@@ -18,8 +18,25 @@ months = ['Nov 2018', 'Dec',
           'Jan 2019', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
 
 
+def format_dow(raw):
+    '''
+    Given a number like 930 representing  the time '09:30', return a
+    formatted label for the time range from this time to one 15 min in
+    the future.
+    '''
+
+    h_start = raw // 100
+    m_start = raw % 100
+    h_end = h_start
+    m_end = m_start + 15
+    if m_end > 59:
+        h_end += 1
+        m_end = m_end - 60
+    return('{:02d}:{:02d}-{:02d}:{:02d}'.format(h_start, m_start, h_end, m_end))
+
+
 def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
-               savefile, suptitle, source_tag, labels=[], hod=False):
+               savefile, suptitle, source_tag, labels=None, hod=False):
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
@@ -27,19 +44,17 @@ def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
         by=by,
         column=column,
         grid=False,
-        # whis='range',
+        whis='range',
         ax=ax)
 
     ax.set_title('')
     ax.grid(axis='y')
 
     ax.set_xlabel(xlabel)
-    if labels:
+    if labels is not None:
         ax.set_xticklabels(labels)
     elif hod:
-        ax.set_xticklabels(['{:02d}:{:02d}'.format(int(x.get_text()) // 100,
-                                                   int(x.get_text()) % 100)
-                            for x in ax.get_xticklabels()])
+        ax.set_xticklabels([format_dow(int(x.get_text())) for x in ax.get_xticklabels()])
 
     ax.set_ylabel(ylabel)
     ax.set_ylim([0, ymax])
@@ -56,7 +71,10 @@ def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
 def do_histplot(column, bins, xmax, ymax, title, savefile, suptitle, source_tag):
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
-    column.plot.hist(bins=bins, range=(0, xmax), ax=ax)
+
+    # Add weights to make the bars sum to 100
+    column.plot.hist(bins=bins, range=(0, xmax), ax=ax,
+                     weights=100 * np.ones(len(column)) / len(column))
 
     ax.grid(axis='y')
 
@@ -71,8 +89,11 @@ def do_histplot(column, bins, xmax, ymax, title, savefile, suptitle, source_tag)
                 ha='right', arrowprops=dict(facecolor='black', edgecolor='black', arrowstyle="->"))
 
     ax.set_xlabel('Minutes')
+    ax.set_ylabel('Proportion of journeys')
     ax.set_title(title)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+
+    ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.0f}%'))
 
     fig.suptitle(suptitle)
 
@@ -81,16 +102,16 @@ def do_histplot(column, bins, xmax, ymax, title, savefile, suptitle, source_tag)
     plt.close()
 
 
-def do_graph_set(df, suptitle, source_tag):
+def do_graph_set(df, suptitle, source_tag, count_max):
 
-    # ***** Passenger Duration
+    # =============== Distribution
 
-    do_histplot(df.minutes, 24, 24, 1000, 'All journeys', 'hist.pdf', suptitle, source_tag)
+    do_histplot(df.minutes, 48, 24, 30, 'Journey time distribution',
+                'hist.pdf', suptitle, source_tag)
 
     # =============== By hour of day
 
     MINUTES_YMAX = 24
-    COUNT_YMAX = 100
 
     do_boxplot(
         df, 100*df.index.hour+df.index.minute, 'minutes',
@@ -99,7 +120,7 @@ def do_graph_set(df, suptitle, source_tag):
 
     do_boxplot(
         df, 100*df.index.hour+df.index.minute, 'count',
-        'Time of Day', 'Journeys per sample', COUNT_YMAX, 'Sample sizes by time of day',
+        'Time of Day', 'Journeys per sample', count_max, 'Sample sizes by time of day',
         'count-tod.pdf', suptitle, source_tag, hod=True)
 
     # =============== By month of year, mon-fri 07:00-18:00
@@ -111,7 +132,7 @@ def do_graph_set(df, suptitle, source_tag):
 
     do_boxplot(
         df, df.Month, 'count',
-        '', 'Journeys per sample', COUNT_YMAX, 'Sample sizes by month',
+        '', 'Journeys per sample', count_max, 'Sample sizes by month',
         'count-month.pdf', suptitle, source_tag, labels=months)
 
     # =============== By day of week
@@ -123,58 +144,20 @@ def do_graph_set(df, suptitle, source_tag):
 
     do_boxplot(
         df, df.index.dayofweek, 'count',
-        '', 'Journeys per sample', COUNT_YMAX, 'Sample sizes by day of week',
+        '', 'Journeys per sample', count_max, 'Sample sizes by day of week',
         'count-dow.pdf', suptitle, source_tag, labels=mon_fri)
 
-    # =============== Grand summary - Mon-Fri, 07:00-18:00
+    # =============== Grand summary
 
-    fig, ax = plt.subplots(nrows=1, ncols=1)
+    do_boxplot(
+        df, None, 'minutes',
+        '', 'Minutes', MINUTES_YMAX, 'All journey times',
+        'minutes-overall.pdf', suptitle, source_tag, labels=[])
 
-    df.boxplot(
-        column='minutes',
-        grid=False,
-        # whis='range',
-        ax=ax)
-
-    ax.set_title('')
-    ax.grid(axis='y')
-
-    ax.set_xticklabels([])
-
-    ax.set_ylabel('Minutes')
-    ax.set_ylim([0, MINUTES_YMAX])
-    ax.set_title('All journey times')
-    ax.yaxis.set_major_locator(ticker.MaxNLocator(25))
-
-    fig.suptitle(suptitle)
-
-    plt.savefig(source_tag + '-minutes-overall.pdf')
-
-    plt.close()
-
-    fig, ax = plt.subplots(nrows=1, ncols=1)
-
-    df.boxplot(
-        column='count',
-        grid=False,
-        # whis='range',
-        ax=ax)
-
-    ax.set_title('')
-    ax.grid(axis='y')
-
-    ax.set_xticklabels([])
-
-    ax.set_ylabel('Journeys per sample')
-    ax.set_ylim([0, COUNT_YMAX])
-    ax.set_title('All sample sizes')
-    ax.yaxis.set_major_locator(ticker.MaxNLocator(25))
-
-    fig.suptitle(suptitle)
-
-    plt.savefig(source_tag + '-count-overall.pdf')
-
-    plt.close()
+    do_boxplot(
+        df, None, 'count',
+        '', 'Journeys per sample', count_max, 'Journeys per sample',
+        'count-overall.pdf', suptitle, source_tag, labels=[])
 
 
 def get_drakewell_data():
@@ -235,7 +218,8 @@ def get_drakewell_data():
     # Hacked-up month representation
     df['Month'] = df.index.year * 100 + df.index.month
 
-    # Subset to >+ 07:30 and < 09:30, Mon-Ffi
+    # Subset to >+ 07:30 and < 09:30, Mon-Fri with more than 10 observations
+    # in each part
     df = df[
             (
                ((df.index.hour == 7) & (df.index.minute >= 30)) |
@@ -274,6 +258,7 @@ def get_bus_data():
     df['minutes'] = df.Duration/60
     df['Month'] = df.index.year * 100 + df.index.month
 
+    # Subset to >+ 07:30 and < 09:30, Mon-Fri with at least 1 observations
     df = df[
             (
               ((df.index.hour == 7) & (df.index.minute >= 30)) |
@@ -292,16 +277,31 @@ def get_bus_data():
 
     return df
 
+# === Drakewell 'bluetruth'
+
 
 df = get_drakewell_data()
 print('Drakewell data:')
 print(df.describe())
 
-suptitle = ('Bluetruth Journey Times\n'
+suptitle = ('All traffic (\'Bluetruth\') Journey Times\n'
             'Milton Road (A14 to Arbury Rd/Union Ln), Nov 2018-Oct 2019, 07:30-09:30'
             )
 
-do_graph_set(df, suptitle, 'drakewell')
+do_graph_set(df, suptitle, 'drakewell', 100)
+
+# Try to understand drop in sample size July 2019
+do_boxplot(
+    df, df.Month, 'count_north',
+    '', 'Journeys per sample', 100, 'Sample sizes by month - 9800X7003HZY',
+    'count-month-north.pdf', suptitle, 'drakewell', labels=months)
+
+do_boxplot(
+    df, df.Month, 'count_south',
+    '', 'Journeys per sample', 100, 'Sample sizes by month - 9800YU0FYRKZ',
+    'count-month-south.pdf', suptitle, 'drakewell', labels=months)
+
+# === SmartCambridge Zone transot data
 
 df = get_bus_data()
 print('Bus data:')
@@ -311,4 +311,4 @@ suptitle = ('Bus Journey Times\n'
             'Milton Road (Busway to Elizabeth Way), Nov 2018-Oct 2019, 07:30-09:30'
             )
 
-do_graph_set(df, suptitle, 'bus')
+do_graph_set(df, suptitle, 'bus', 10)
