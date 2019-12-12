@@ -11,6 +11,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
+PDF_DIR = 'pdf'
+
 
 sns.set()
 plt.rc('figure', figsize=(11.69, 8.27))
@@ -100,7 +102,7 @@ def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
 
     fig.suptitle(suptitle)
 
-    plt.savefig(source_tag + '-' + savefile)
+    plt.savefig(os.path.join(PDF_DIR, source_tag + '-' + savefile))
 
     plt.close()
 
@@ -134,7 +136,7 @@ def do_histplot(column, bins, xmax, ymax, title, savefile, suptitle, source_tag)
 
     fig.suptitle(suptitle)
 
-    plt.savefig(source_tag + '-' + savefile)
+    plt.savefig(os.path.join(PDF_DIR, source_tag + '-' + savefile))
 
     plt.close()
 
@@ -458,8 +460,9 @@ def get_vivacity_data():
     return df
 
 
-# === Drakewell 'bluetruth'
+os.mkdir(PDF_DIR)
 
+# === Drakewell 'bluetruth'
 
 df = get_drakewell_data()
 df = time_filter(df)

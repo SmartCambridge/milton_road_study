@@ -2,16 +2,17 @@
 
 # Convert PDFs to PNGs as needed
 
+mkdir -p png
 
-pdftoppm bus-hist.pdf -singlefile -png bus-hist
-pdftoppm drakewell-hist.pdf -singlefile -png drakewell-hist
-pdftoppm bus-minutes-overall.pdf -singlefile -png bus-minutes-overall
-pdftoppm drakewell-minutes-overall.pdf -singlefile -png drakewell-minutes-overall
-pdftoppm bus-minutes-tod.pdf -singlefile -png bus-minutes-tod
-pdftoppm drakewell-minutes-tod.pdf -singlefile -png drakewell-minutes-tod
-pdftoppm bus-minutes-dow.pdf -singlefile -png bus-minutes-dow
-pdftoppm drakewell-minutes-dow.pdf -singlefile -png drakewell-minutes-dow
-pdftoppm bus-minutes-month.pdf -singlefile -png bus-minutes-month
-pdftoppm drakewell-minutes-month.pdf -singlefile -png drakewell-minutes-month
-pdftoppm bus-count-overall.pdf -singlefile -png bus-count-overall
-pdftoppm drakewell-count-overall.pdf -singlefile -png drakewell-count-overall
+pdftoppm pdf/bus-hist.pdf -singlefile -png png/bus-hist
+pdftoppm pdf/drakewell-hist.pdf -singlefile -png png/drakewell-hist
+pdftoppm pdf/bus-minutes-overall.pdf -singlefile -png png/bus-minutes-overall
+pdftoppm pdf/drakewell-minutes-overall.pdf -singlefile -png png/drakewell-minutes-overall
+pdftoppm pdf/bus-minutes-tod.pdf -singlefile -png png/bus-minutes-tod
+pdftoppm pdf/drakewell-minutes-tod.pdf -singlefile -png png/drakewell-minutes-tod
+pdftoppm pdf/bus-minutes-dow.pdf -singlefile -png png/bus-minutes-dow
+pdftoppm pdf/drakewell-minutes-dow.pdf -singlefile -png png/drakewell-minutes-dow
+pdftoppm pdf/bus-minutes-month.pdf -singlefile -png png/bus-minutes-month
+pdftoppm pdf/drakewell-minutes-month.pdf -singlefile -png png/drakewell-minutes-month
+pdftoppm pdf/bus-count-overall.pdf -singlefile -png png/bus-count-overall
+pdftoppm pdf/drakewell-count-overall.pdf -singlefile -png png/drakewell-count-overall

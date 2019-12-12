@@ -108,16 +108,16 @@ Graphs
 All of these graphs come in pairs, with each pair showing bus data first and
 general traffic data second.
 
-![](bus-hist.png)
-![](drakewell-hist.png)
-![](bus-minutes-overall.png)
-![](drakewell-minutes-overall.png)
-![](bus-minutes-tod.png)
-![](drakewell-minutes-tod.png)
-![](bus-minutes-dow.png)
-![](drakewell-minutes-dow.png)
-![](bus-minutes-month.png)
-![](drakewell-minutes-month.png)
-![](bus-count-overall.png)
-![](drakewell-count-overall.png)
+![](png/bus-hist.png)
+![](png/drakewell-hist.png)
+![](png/bus-minutes-overall.png)
+![](png/drakewell-minutes-overall.png)
+![](png/bus-minutes-tod.png)
+![](png/drakewell-minutes-tod.png)
+![](png/bus-minutes-dow.png)
+![](png/drakewell-minutes-dow.png)
+![](png/bus-minutes-month.png)
+![](png/drakewell-minutes-month.png)
+![](png/bus-count-overall.png)
+![](png/drakewell-count-overall.png)
 
