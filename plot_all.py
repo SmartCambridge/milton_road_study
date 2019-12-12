@@ -97,10 +97,10 @@ def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
 
     ax.set_ylabel(ylabel)
     ax.set_ylim([0, ymax])
-    ax.set_title(title + ' (5th, 25th, 50th, 75th and 95th percentiles)')
+    ax.set_title('(5th, 25th, 50th, 75th and 95th percentiles)')
     ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=25, steps=[1, 2, 5, 10], integer=True))
 
-    fig.suptitle(suptitle)
+    fig.suptitle(suptitle + ' ' + title)
 
     plt.savefig(os.path.join(PDF_DIR, source_tag + '-' + savefile))
 
@@ -129,12 +129,12 @@ def do_histplot(column, bins, xmax, ymax, title, savefile, suptitle, source_tag)
 
     ax.set_xlabel('Minutes')
     ax.set_ylabel('Proportion of journeys')
-    ax.set_title(title)
+    ax.set_title('')
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
 
     ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.0f}%'))
 
-    fig.suptitle(suptitle)
+    fig.suptitle(suptitle + ' ' + title)
 
     plt.savefig(os.path.join(PDF_DIR, source_tag + '-' + savefile))
 
@@ -147,55 +147,55 @@ def do_journey_time_graph_set(df, suptitle, source_tag, count_max):
 
     # =============== Distribution
 
-    do_histplot(df.minutes, 2*MINUTES_YMAX, MINUTES_YMAX, 20, 'Journey time distribution',
+    do_histplot(df.minutes, 2*MINUTES_YMAX, MINUTES_YMAX, 20, 'journey duration distribution',
                 'hist.pdf', suptitle, source_tag)
 
     # =============== By hour of day
 
     do_boxplot(
         df, 100*df.index.hour+df.index.minute, 'minutes',
-        'Time of Day', 'Minutes', MINUTES_YMAX, 'Journey time by time of day',
+        'Time of Day', 'Minutes', MINUTES_YMAX, 'journey duration by time of day',
         'minutes-tod.pdf', suptitle, source_tag, hod=True)
 
     do_boxplot(
         df, 100*df.index.hour+df.index.minute, 'count',
-        'Time of Day', 'Journeys per sample', count_max, 'Sample sizes by time of day',
+        'Time of Day', 'Journeys per sample', count_max, 'sample sizes by time of day',
         'count-tod.pdf', suptitle, source_tag, hod=True)
 
     # =============== By month of year, mon-fri 07:00-18:00
 
     do_boxplot(
         df, df.Month, 'minutes',
-        '', 'Minutes', MINUTES_YMAX, 'Journey time by month',
+        '', 'Minutes', MINUTES_YMAX, 'journey duration by month',
         'minutes-month.pdf', suptitle, source_tag, labels=months)
 
     do_boxplot(
         df, df.Month, 'count',
-        '', 'Journeys per sample', count_max, 'Sample sizes by month',
+        '', 'Journeys per sample', count_max, 'sample sizes by month',
         'count-month.pdf', suptitle, source_tag, labels=months)
 
     # =============== By day of week
 
     do_boxplot(
         df, df.index.dayofweek, 'minutes',
-        '', 'Minutes', MINUTES_YMAX, 'Journey time by day of week',
+        '', 'Minutes', MINUTES_YMAX, 'journey duration by day of week',
         'minutes-dow.pdf', suptitle, source_tag, labels=mon_fri)
 
     do_boxplot(
         df, df.index.dayofweek, 'count',
-        '', 'Journeys per sample', count_max, 'Sample sizes by day of week',
+        '', 'Journeys per sample', count_max, 'sample sizes by day of week',
         'count-dow.pdf', suptitle, source_tag, labels=mon_fri)
 
     # =============== Grand summary
 
     do_boxplot(
         df, None, 'minutes',
-        '', 'Minutes', MINUTES_YMAX, 'All journey times',
+        '', 'Minutes', MINUTES_YMAX, 'journey durations',
         'minutes-overall.pdf', suptitle, source_tag, labels=[])
 
     do_boxplot(
         df, None, 'count',
-        '', 'Journeys per sample', count_max, 'Journeys per sample',
+        '', 'Journeys per sample', count_max, 'sample sizes',
         'count-overall.pdf', suptitle, source_tag, labels=[])
 
 
@@ -205,48 +205,48 @@ def do_vehicle_count_graph_set(df, suptitle, source_tag, vcount_max, bcount_max)
 
     do_boxplot(
         df, 100*df.index.hour+df.index.minute, 'motor_total',
-        'Time of Day', 'Journeys per sample', vcount_max, 'Motor journeys by time of day',
+        'Time of Day', 'Journeys per sample', vcount_max, 'Number of motor journeys by time of day',
         'all-count-tod.pdf', suptitle, source_tag, hod=True)
 
     do_boxplot(
         df, 100*df.index.hour+df.index.minute, 'bus',
-        'Time of Day', 'Journeys per sample', bcount_max, 'Bus journeys by time of day',
+        'Time of Day', 'Journeys per sample', bcount_max, 'Number of bus journeys by time of day',
         'bus-count-tod.pdf', suptitle, source_tag, hod=True)
 
     # =============== By month of year, mon-fri 07:00-18:00
 
     do_boxplot(
         df, df.Month, 'motor_total',
-        '', 'Journeys per sample', vcount_max, 'Motor journeys by month',
+        '', 'Journeys per sample', vcount_max, 'Number of motor journeys by month',
         'all-count-month.pdf', suptitle, source_tag, labels=months_vivacity)
 
     do_boxplot(
         df, df.Month, 'bus',
-        '', 'Journeys per sample', bcount_max, 'Bus journeys by month',
+        '', 'Journeys per sample', bcount_max, 'Number of bus journeys by month',
         'bus-count-month.pdf', suptitle, source_tag, labels=months_vivacity)
 
     # =============== By day of week
 
     do_boxplot(
         df, df.index.dayofweek, 'motor_total',
-        '', 'Journeys per sample', vcount_max, 'Bus journeys by day of week',
+        '', 'Journeys per sample', vcount_max, 'Number of bus journeys by day of week',
         'all-count-dow.pdf', suptitle, source_tag, labels=mon_fri)
 
     do_boxplot(
         df, df.index.dayofweek, 'bus',
-        '', 'Journeys per sample', bcount_max, 'Bus journeys by day of week',
+        '', 'Journeys per sample', bcount_max, 'Number of bus journeys by day of week',
         'bus-count-dow.pdf', suptitle, source_tag, labels=mon_fri)
 
     # =============== Grand summary
 
     do_boxplot(
         df, None, 'motor_total',
-        '', 'Journeys per sample', vcount_max, 'Motor journeys per sample',
+        '', 'Journeys per sample', vcount_max, 'Number of motor journeys',
         'all-count-overall.pdf', suptitle, source_tag, labels=[])
 
     do_boxplot(
         df, None, 'bus',
-        '', 'Journeys per sample', bcount_max, 'Bus journeys per sample',
+        '', 'Journeys per sample', bcount_max, 'Number of bus journeys per sample',
         'bus-count-overall.pdf', suptitle, source_tag, labels=[])
 
 
@@ -460,34 +460,30 @@ def get_vivacity_data():
     return df
 
 
-os.mkdir(PDF_DIR)
+os.makedirs(PDF_DIR, exist_ok=True)
 
 # === Drakewell 'bluetruth'
 
-df = get_drakewell_data()
-df = time_filter(df)
+df_drakewell = get_drakewell_data()
+df_drakewell = time_filter(df_drakewell)
 print('Drakewell data:')
-print(df.describe())
+print(df_drakewell.describe())
 
-suptitle = ('All traffic (\'Bluetruth\') Journey Times\n'
-            'Milton Road (A14 to Arbury Rd/Union Ln), Nov 2018-Oct 2019, 07:30-09:30, Mon-Fri'
-            )
+suptitle = ('\'All traffic\'')
 
-do_journey_time_graph_set(df, suptitle, 'drakewell', 100)
+do_journey_time_graph_set(df_drakewell, suptitle, 'drakewell', 100)
 
 
 # === SmartCambridge Zone transot data
 
-df = get_bus_data()
-df = time_filter(df)
+df_bus = get_bus_data()
+df_bus = time_filter(df_bus)
 print('Bus data:')
-print(df.describe())
+print(df_bus.describe())
 
-suptitle = ('Bus Journey Times\n'
-            'Milton Road (A14 to Arbury Rd/Union Ln), Nov 2018-Oct 2019, 07:30-09:30, Mon-Fri'
-            )
+suptitle = ('Bus')
 
-do_journey_time_graph_set(df, suptitle, 'bus', 10)
+do_journey_time_graph_set(df_bus, suptitle, 'bus', 10)
 
 # === Vivacity traffic counts
 
@@ -496,8 +492,17 @@ df = time_filter(df)
 print('Vivacity data:')
 print(df.describe())
 
-suptitle = ('Traffic volumes \n'
-            'Junction of Milton Road and Arbury Rd/Union Ln, May-Oct 2019, 07:30-09:30, Mon-Fri'
-            )
+suptitle = ('')
 
 do_vehicle_count_graph_set(df, suptitle, 'vivacity', 200, 20)
+
+# === combined Drakewell/bus
+
+df = pd.merge(df_drakewell, df_bus, how='outer', left_index=True, right_index=True, suffixes=('_drakewell', '_bus'))
+print('Combined data:')
+print(df.describe())
+
+do_boxplot(
+    df, None, ['minutes_bus', 'minutes_drakewell'],
+    '', 'Minutes', 40, 'journey durations',
+    'minutes-overall.pdf', 'All', 'both', labels=['Bus', 'All trafic'])
