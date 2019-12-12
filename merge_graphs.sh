@@ -21,4 +21,12 @@ drakewell-count-tod.pdf \
 bus-count-dow.pdf \
 drakewell-count-dow.pdf \
 bus-count-month.pdf \
-drakewell-count-month.pdf
+drakewell-count-month.pdf \
+vivacity-bus-count-overall.pdf \
+vivacity-all-count-overall.pdf \
+vivacity-bus-count-tod.pdf \
+vivacity-all-count-tod.pdf \
+vivacity-bus-count-dow.pdf \
+vivacity-all-count-dow.pdf \
+vivacity-bus-count-month.pdf \
+vivacity-all-count-month.pdf

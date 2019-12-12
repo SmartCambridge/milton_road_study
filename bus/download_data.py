@@ -10,12 +10,12 @@ from dateutil.relativedelta import relativedelta
 
 logger = logging.getLogger('__name__')
 
-API_SCHEMA = os.getenv('API_SCHEMA', 'https://smartcambridge.org/api/docs/')
+API_SCHEMA = os.getenv('API_SCHEMA', 'https://tfc-app1.cl.cam.ac.uk/api/docs/')
 
 API_TOKEN = os.getenv('API_TOKEN', None)
 assert API_TOKEN, 'API_TOKEN environment variable not set'
 
-zones = ['milton_road_2_in']
+zones = ['milton_road_alternate_in']
 
 first = datetime.date(2018, 11, 1)
 last = datetime.date(2019, 10, 1)

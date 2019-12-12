@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+import datetime
+import json
+import os
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -17,8 +21,24 @@ mon_fri = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', '
 months = ['Nov 2018', 'Dec',
           'Jan 2019', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
 
+months_vivacity = ['May 2019', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
 
-def format_dow(raw):
+
+def time_filter(df):
+    '''
+    Filter data frame to just contain records 07:30..09:30
+    '''
+
+    return df[
+                (
+                   ((df.index.hour == 7) & (df.index.minute >= 30)) |
+                   (df.index.hour == 8) |
+                   ((df.index.hour == 9) & (df.index.minute < 30))
+                )
+             ]
+
+
+def format_hod(raw):
     '''
     Given a number like 930 representing  the time '09:30', return a
     formatted label for the time range from this time to one 15 min in
@@ -35,8 +55,19 @@ def format_dow(raw):
     return('{:02d}:{:02d}-{:02d}:{:02d}'.format(h_start, m_start, h_end, m_end))
 
 
+def format_hod1(raw):
+    '''
+    Given a number like 930 representing  the time '09:30', return a
+    formatted label for the hour if minutes are 0 and '' otherwise
+    '''
+
+    h_start = raw // 100
+    m_start = raw % 100
+    return '{:02d}'.format(h_start) if m_start == 0 else ''
+
+
 def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
-               savefile, suptitle, source_tag, labels=None, hod=False):
+               savefile, suptitle, source_tag, labels=None, hod=False, hod1=False):
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
@@ -46,8 +77,8 @@ def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
         by=by,
         column=column,
         grid=False,
-        #whis='range',
-        whis=(1, 99),
+        # whis='range',
+        whis=(5, 95),
         flierprops=flierprops,
         ax=ax)
 
@@ -58,12 +89,14 @@ def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
     if labels is not None:
         ax.set_xticklabels(labels)
     elif hod:
-        ax.set_xticklabels([format_dow(int(x.get_text())) for x in ax.get_xticklabels()])
+        ax.set_xticklabels([format_hod(int(x.get_text())) for x in ax.get_xticklabels()])
+    elif hod1:
+        ax.set_xticklabels([format_hod1(int(x.get_text())) for x in ax.get_xticklabels()])
 
     ax.set_ylabel(ylabel)
     ax.set_ylim([0, ymax])
-    ax.set_title(title)
-    ax.yaxis.set_major_locator(ticker.MaxNLocator(25))
+    ax.set_title(title + ' (5th, 25th, 50th, 75th and 95th percentiles)')
+    ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=25, steps=[1, 2, 5, 10], integer=True))
 
     fig.suptitle(suptitle)
 
@@ -106,16 +139,16 @@ def do_histplot(column, bins, xmax, ymax, title, savefile, suptitle, source_tag)
     plt.close()
 
 
-def do_graph_set(df, suptitle, source_tag, count_max):
+def do_journey_time_graph_set(df, suptitle, source_tag, count_max):
+
+    MINUTES_YMAX = 40
 
     # =============== Distribution
 
-    do_histplot(df.minutes, 48, 24, 30, 'Journey time distribution',
+    do_histplot(df.minutes, 2*MINUTES_YMAX, MINUTES_YMAX, 20, 'Journey time distribution',
                 'hist.pdf', suptitle, source_tag)
 
     # =============== By hour of day
-
-    MINUTES_YMAX = 24
 
     do_boxplot(
         df, 100*df.index.hour+df.index.minute, 'minutes',
@@ -162,6 +195,57 @@ def do_graph_set(df, suptitle, source_tag, count_max):
         df, None, 'count',
         '', 'Journeys per sample', count_max, 'Journeys per sample',
         'count-overall.pdf', suptitle, source_tag, labels=[])
+
+
+def do_vehicle_count_graph_set(df, suptitle, source_tag, vcount_max, bcount_max):
+
+    # === by time of day
+
+    do_boxplot(
+        df, 100*df.index.hour+df.index.minute, 'motor_total',
+        'Time of Day', 'Journeys per sample', vcount_max, 'Motor journeys by time of day',
+        'all-count-tod.pdf', suptitle, source_tag, hod=True)
+
+    do_boxplot(
+        df, 100*df.index.hour+df.index.minute, 'bus',
+        'Time of Day', 'Journeys per sample', bcount_max, 'Bus journeys by time of day',
+        'bus-count-tod.pdf', suptitle, source_tag, hod=True)
+
+    # =============== By month of year, mon-fri 07:00-18:00
+
+    do_boxplot(
+        df, df.Month, 'motor_total',
+        '', 'Journeys per sample', vcount_max, 'Motor journeys by month',
+        'all-count-month.pdf', suptitle, source_tag, labels=months_vivacity)
+
+    do_boxplot(
+        df, df.Month, 'bus',
+        '', 'Journeys per sample', bcount_max, 'Bus journeys by month',
+        'bus-count-month.pdf', suptitle, source_tag, labels=months_vivacity)
+
+    # =============== By day of week
+
+    do_boxplot(
+        df, df.index.dayofweek, 'motor_total',
+        '', 'Journeys per sample', vcount_max, 'Bus journeys by day of week',
+        'all-count-dow.pdf', suptitle, source_tag, labels=mon_fri)
+
+    do_boxplot(
+        df, df.index.dayofweek, 'bus',
+        '', 'Journeys per sample', bcount_max, 'Bus journeys by day of week',
+        'bus-count-dow.pdf', suptitle, source_tag, labels=mon_fri)
+
+    # =============== Grand summary
+
+    do_boxplot(
+        df, None, 'motor_total',
+        '', 'Journeys per sample', vcount_max, 'Motor journeys per sample',
+        'all-count-overall.pdf', suptitle, source_tag, labels=[])
+
+    do_boxplot(
+        df, None, 'bus',
+        '', 'Journeys per sample', bcount_max, 'Bus journeys per sample',
+        'bus-count-overall.pdf', suptitle, source_tag, labels=[])
 
 
 def get_drakewell_data():
@@ -222,21 +306,14 @@ def get_drakewell_data():
     # Hacked-up month representation
     df['Month'] = df.index.year * 100 + df.index.month
 
-    # Subset to >+ 07:30 and < 09:30, Mon-Fri with more than 10 observations
-    # in each part
+    # Subset to Mon-Fri with more than 10 observations in each half
     df = df[
-            (
-               ((df.index.hour == 7) & (df.index.minute >= 30)) |
-               (df.index.hour == 8) |
-               ((df.index.hour == 9) & (df.index.minute < 30))
-            )
-            &
             (
                df.index.dayofweek < 5
             )
             &
             (
-               (df['count_north'] >= 10) & (df['count_south'] >= 10)
+               (df.count_north >= 10) & (df.count_south >= 10)
             )
            ]
 
@@ -245,7 +322,7 @@ def get_drakewell_data():
 
 def get_bus_data():
 
-    DATAFILE = 'bus/transits-milton_road_2_in.csv'
+    DATAFILE = 'bus/transits-milton_road_alternate_in.csv'
 
     # "Date","Duration","Distance"
 
@@ -255,21 +332,120 @@ def get_bus_data():
     df_raw = df_raw.sort_index()
 
     df = pd.DataFrame()
-    df['Duration'] = df_raw.Duration.resample('15min').median()
-    df['Distance'] = df_raw.Distance.resample('15min').median()
+    df['Duration'] = df_raw.Duration.resample('15min').mean()
+    df['Distance'] = df_raw.Distance.resample('15min').mean()
     df['count'] = df_raw.Duration.resample('15min').count()
 
     df['minutes'] = df.Duration/60
     df['Month'] = df.index.year * 100 + df.index.month
 
-    # Subset to >+ 07:30 and < 09:30, Mon-Fri with at least 1 observations
+    # Subset to Mon-Fri with at least 1 observations of less that 2 hours
     df = df[
             (
-              ((df.index.hour == 7) & (df.index.minute >= 30)) |
-              (df.index.hour == 8) |
-              ((df.index.hour == 9) & (df.index.minute < 30))
+              df.index.dayofweek < 5
             )
             &
+            (
+              df['count'] > 0
+            )
+            &
+            (
+              df.Duration < 7200  # 2 hours
+            )
+           ]
+
+    return df
+
+
+def get_vivacity_data():
+
+    '''
+    Retrieve data for `countline` in `direction` between the days
+    from `start` to `end`. Input format below. Output is a 2D array
+    with one row per sample.
+
+    {
+        "ts": 1562284800.0,
+        "timestamp": "2019-07-05T00:00:00+00:00",
+        "from": "2019-07-05T00:00:00.000Z",
+        "to": "2019-07-05T00:05:00.000Z",
+        "countline": "13069",
+        "direction": "in",
+        "counts": {
+            "pedestrian": 1,
+            "cyclist": 0,
+            "motorbike": 1,
+            "car": 1,
+            "taxi": 0,
+            "van": 1,
+            "minibus": 0,
+            "bus": 0,
+            "rigid": 0,
+            "truck": 0,
+            "emergency car": 0,
+            "emergency van": 0,
+            "fire engine": 0
+        }
+    }
+    ...
+    '''
+
+    VCLASSES = ("pedestrian", "cyclist", "motorbike", "car",
+                "taxi", "van", "minibus", "bus", "rigid",
+                "truck", "emergency car", "emergency van",
+                "fire engine")
+
+    ONE_DAY = datetime.timedelta(days=1)
+
+    start = datetime.date(2018, 11, 1)
+    end = datetime.date(2019, 10, 31)
+    countline = '13079'
+
+    day = start
+    data = []
+    while day <= end:
+
+        try:
+            filename = os.path.join(
+                'vivacity', 'vivacity_data/',
+                day.strftime('%Y'),
+                day.strftime('%m'),
+                day.strftime('%d'),
+                countline,
+                'in.txt')
+            with open(filename) as file:
+                for line in file:
+                    data_block = json.loads(line)
+                    row = ([data_block['timestamp']] +
+                           [data_block['counts'][key] for key in VCLASSES])
+                    data.append(row)
+        except FileNotFoundError:
+            pass
+        day += ONE_DAY
+
+    df_raw = pd.DataFrame(data)
+    df_raw.columns = ('timestamp',) + VCLASSES
+
+    df_raw.index = pd.to_datetime(df_raw['timestamp'])
+    df_raw = df_raw.sort_index()
+    df_raw.drop('timestamp', axis=1, inplace=True)
+
+    df = pd.DataFrame()
+    for key in VCLASSES:
+        df[key] = df_raw[key].resample('15min').sum()
+    df['count'] = df_raw.pedestrian.resample('15min').count()
+
+    df['motor_total'] = 0
+    for key in [v for v in VCLASSES if v not in ('pedestrian', 'cyclist')]:
+        df['motor_total'] = df['motor_total'] + df[key]
+    df.motor_total.replace(0, np.nan, inplace=True)
+
+    df.bus.replace(0, np.nan, inplace=True)
+
+    df['Month'] = df.index.year * 100 + df.index.month
+
+    # Subset to Mon-Fri with at least 1 observations
+    df = df[
             (
               df.index.dayofweek < 5
             )
@@ -281,38 +457,44 @@ def get_bus_data():
 
     return df
 
+
 # === Drakewell 'bluetruth'
 
 
 df = get_drakewell_data()
+df = time_filter(df)
 print('Drakewell data:')
 print(df.describe())
 
 suptitle = ('All traffic (\'Bluetruth\') Journey Times\n'
-            'Milton Road (A14 to Arbury Rd/Union Ln), Nov 2018-Oct 2019, 07:30-09:30'
+            'Milton Road (A14 to Arbury Rd/Union Ln), Nov 2018-Oct 2019, 07:30-09:30, Mon-Fri'
             )
 
-do_graph_set(df, suptitle, 'drakewell', 100)
+do_journey_time_graph_set(df, suptitle, 'drakewell', 100)
 
-# Try to understand drop in sample size July 2019
-do_boxplot(
-    df, df.Month, 'count_north',
-    '', 'Journeys per sample', 100, 'Sample sizes by month - 9800X7003HZY',
-    'count-month-north.pdf', suptitle, 'drakewell', labels=months)
-
-do_boxplot(
-    df, df.Month, 'count_south',
-    '', 'Journeys per sample', 100, 'Sample sizes by month - 9800YU0FYRKZ',
-    'count-month-south.pdf', suptitle, 'drakewell', labels=months)
 
 # === SmartCambridge Zone transot data
 
 df = get_bus_data()
+df = time_filter(df)
 print('Bus data:')
 print(df.describe())
 
 suptitle = ('Bus Journey Times\n'
-            'Milton Road (Busway to Elizabeth Way), Nov 2018-Oct 2019, 07:30-09:30'
+            'Milton Road (A14 to Arbury Rd/Union Ln), Nov 2018-Oct 2019, 07:30-09:30, Mon-Fri'
             )
 
-do_graph_set(df, suptitle, 'bus', 10)
+do_journey_time_graph_set(df, suptitle, 'bus', 10)
+
+# === Vivacity traffic counts
+
+df = get_vivacity_data()
+df = time_filter(df)
+print('Vivacity data:')
+print(df.describe())
+
+suptitle = ('Traffic volumes \n'
+            'Junction of Milton Road and Arbury Rd/Union Ln, May-Oct 2019, 07:30-09:30, Mon-Fri'
+            )
+
+do_vehicle_count_graph_set(df, suptitle, 'vivacity', 200, 20)

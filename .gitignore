@@ -5,3 +5,4 @@ setup_environment
 venv/
 setup_env
 .DS_Store
+vivacity/vivacity_data
