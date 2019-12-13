@@ -16,5 +16,6 @@ pdftoppm pdf/bus-minutes-month.pdf -singlefile -png png/bus-minutes-month
 pdftoppm pdf/drakewell-minutes-month.pdf -singlefile -png png/drakewell-minutes-month
 pdftoppm pdf/bus-count-overall.pdf -singlefile -png png/bus-count-overall
 pdftoppm pdf/drakewell-count-overall.pdf -singlefile -png png/drakewell-count-overall
-pdftoppm pdf/both-minutes-overall.pdf -singlefile -png png/both-minutes-overall
 pdftoppm pdf/drakewell-count-month.pdf -singlefile -png png/drakewell-count-month
+pdftoppm pdf/both-minutes-overall.pdf -singlefile -png png/both-minutes-overall
+pdftoppm pdf/both-hist.pdf -singlefile -png png/both-hist

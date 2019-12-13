@@ -107,25 +107,26 @@ def do_boxplot(df, by, column, xlabel, ylabel, ymax, title,
     plt.close()
 
 
-def do_histplot(column, bins, xmax, ymax, title, savefile, suptitle, source_tag):
+def do_histplot(columns, bins, xmax, ymax, title, savefile, suptitle, source_tag, labels=None):
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
     # Add weights to make the bars sum to 100
-    column.plot.hist(bins=bins, range=(0, xmax), ax=ax,
-                     weights=100 * np.ones(len(column)) / len(column))
+    new_columns = []
+    weights = []
+    for column in columns:
+        c = column.copy().dropna()
+        w = 100 * np.ones_like(c) / float(len(c))
+        new_columns.append(c)
+        weights.append(w)
+    ax.hist(new_columns, bins=bins, range=(0, xmax), weights=weights, rwidth=1, label=labels)
+    if labels is not None:
+        ax.legend(prop={'size': 10})
 
     ax.grid(axis='y')
 
     ax.set_ylim([0, ymax])
     ax.set_xlim([0, xmax])
-
-    print(column.max())
-
-    ax.axvline(x=column.max(), linestyle='--')
-    ax.annotate('Max', xy=(column.max(), 0.9), xycoords=('data', 'axes fraction'),
-                xytext=(-30, 0), textcoords='offset points',
-                ha='right', arrowprops=dict(facecolor='black', edgecolor='black', arrowstyle="->"))
 
     ax.set_xlabel('Minutes')
     ax.set_ylabel('Proportion of journeys')
@@ -147,7 +148,7 @@ def do_journey_time_graph_set(df, suptitle, source_tag, count_max):
 
     # =============== Distribution
 
-    do_histplot(df.minutes, 2*MINUTES_YMAX, MINUTES_YMAX, 20, 'journey duration distribution',
+    do_histplot([df.minutes], 2*MINUTES_YMAX, MINUTES_YMAX, 20, 'journey duration distribution',
                 'hist.pdf', suptitle, source_tag)
 
     # =============== By hour of day
@@ -506,3 +507,6 @@ do_boxplot(
     df, None, ['minutes_bus', 'minutes_drakewell'],
     '', 'Minutes', 40, 'journey durations',
     'minutes-overall.pdf', 'All', 'both', labels=['Bus', 'All trafic'])
+
+do_histplot([df.minutes_bus, df.minutes_drakewell], 2*40, 40, 20, 'journey duration distribution',
+            'hist.pdf', 'All', 'both', labels=['Bus', 'All traffic'])

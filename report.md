@@ -134,8 +134,7 @@ Graphs
 All of these graphs come in pairs, with each pair showing bus data first and
 general traffic data second.
 
-![](png/bus-hist.png)
-![](png/drakewell-hist.png)
+![](png/both-hist.png)
 ![](png/both-minutes-overall.png)
 ![](png/bus-minutes-tod.png)
 ![](png/drakewell-minutes-tod.png)
