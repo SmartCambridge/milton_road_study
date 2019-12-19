@@ -1,5 +1,4 @@
 setup_environment
-*.pdf
 *.csv
 .ipynb_checkpoints
 venv/
